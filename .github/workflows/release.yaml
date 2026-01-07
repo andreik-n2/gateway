@@ -24,28 +24,28 @@ jobs:
 
 
       # Benchmark
-      - name: Run Benchmark tests
-        env:
-          KIND_NODE_TAG: v1.29.10
-          IMAGE_PULL_POLICY: IfNotPresent
-          # Args for benchmark test
-          BENCHMARK_BASELINE_RPS: 100
-          BENCHMARK_CONNECTIONS: 100
-          BENCHMARK_DURATION: 90
-          BENCHMARK_CPU_LIMITS: 1000m
-          BENCHMARK_MEMORY_LIMITS: 2000Mi
-          BENCHMARK_REPORT_DIR: benchmark_report
-          BENCHMARK_RENDER_PNG: "false"
-        run: make benchmark
-
-      - name: Package benchmark report
-        run: cd test/benchmark && zip -r benchmark_report.zip benchmark_report
-
-      - name: Upload Benchmark Report
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
-        with:
-          name: benchmark_report
-          path: test/benchmark/benchmark_report.zip
+#      - name: Run Benchmark tests
+#        env:
+#          KIND_NODE_TAG: v1.29.10
+#          IMAGE_PULL_POLICY: IfNotPresent
+#          # Args for benchmark test
+#          BENCHMARK_BASELINE_RPS: 100
+#          BENCHMARK_CONNECTIONS: 100
+#          BENCHMARK_DURATION: 90
+#          BENCHMARK_CPU_LIMITS: 1000m
+#          BENCHMARK_MEMORY_LIMITS: 2000Mi
+#          BENCHMARK_REPORT_DIR: benchmark_report
+#          BENCHMARK_RENDER_PNG: "false"
+#        run: make benchmark
+#
+#      - name: Package benchmark report
+#        run: cd test/benchmark && zip -r benchmark_report.zip benchmark_report
+#
+#      - name: Upload Benchmark Report
+#        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+#        with:
+#          name: benchmark_report
+#          path: test/benchmark/benchmark_report.zip
 
   release:
     runs-on: ubuntu-22.04
@@ -73,19 +73,19 @@ jobs:
 #        run: |
 #          skopeo copy --all docker://docker.io/envoyproxy/gateway-dev:${{ env.sha_short }} docker://docker.io/n2itadmin/envoyproxy-gateway:${{ env.release_tag }}
 
-      - name: Generate Release Artifacts
-        run: IMAGE_PULL_POLICY=IfNotPresent make generate-artifacts IMAGE=n2itadmin/envoyproxy-gateway TAG=${{ env.release_tag }} OUTPUT_DIR=release-artifacts
+#      - name: Generate Release Artifacts
+#        run: IMAGE_PULL_POLICY=IfNotPresent make generate-artifacts IMAGE=n2itadmin/envoyproxy-gateway TAG=${{ env.release_tag }} OUTPUT_DIR=release-artifacts
 
-      - name: Build and Push EG Release Helm Chart
-        run: |
-          IMAGE_PULL_POLICY=IfNotPresent OCI_REGISTRY=oci://docker.io/envoyproxy CHART_VERSION=${{ env.release_tag }} IMAGE=docker.io/n2itadmin/envoyproxy-gateway TAG=${{ env.release_tag }} make helm-package helm-push
-          IMAGE_PULL_POLICY=IfNotPresent OCI_REGISTRY=oci://docker.io/envoyproxy CHART_VERSION=${{ env.without_v_release_tag }} IMAGE=docker.io/n2itadmin/envoyproxy-gateway TAG=${{ env.release_tag }} make helm-package helm-push
+#      - name: Build and Push EG Release Helm Chart
+#        run: |
+#          IMAGE_PULL_POLICY=IfNotPresent OCI_REGISTRY=oci://docker.io/n2itadmin CHART_VERSION=${{ env.release_tag }} IMAGE=docker.io/n2itadmin/envoyproxy-gateway TAG=${{ env.release_tag }} make helm-package helm-push
+#          IMAGE_PULL_POLICY=IfNotPresent OCI_REGISTRY=oci://docker.io/n2itadmin CHART_VERSION=${{ env.without_v_release_tag }} IMAGE=docker.io/n2itadmin/envoyproxy-gateway TAG=${{ env.release_tag }} make helm-package helm-push
 
-      - name: Download Benchmark Report
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
-        with:
-          name: benchmark_report
-          path: release-artifacts
+#      - name: Download Benchmark Report
+#        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
+#        with:
+#          name: benchmark_report
+#          path: release-artifacts
 
       - name: Build egctl multiarch binaries
         run: |
@@ -104,11 +104,6 @@ jobs:
         uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b  # v2.5.0
         with:
           files: |
-            release-artifacts/install.yaml
-            release-artifacts/quickstart.yaml
-            release-artifacts/envoy-gateway-crds.yaml
-            release-artifacts/release-notes.yaml
-            release-artifacts/benchmark_report.zip
             envoy-gateway_${{ env.release_tag }}_linux_amd64.tar.gz
             envoy-gateway_${{ env.release_tag }}_linux_arm64.tar.gz
             envoy-gateway_${{ env.release_tag }}_darwin_amd64.tar.gz
