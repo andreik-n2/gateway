@@ -7,6 +7,7 @@ package bootstrap
 
 import (
 	"fmt"
+	"strings"
 
 	bootstrapv3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
 	clusterv3 "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
@@ -60,8 +61,17 @@ func Validate(boostrapConfig *egv1a1.ProxyBootstrap) error {
 	}
 
 	// Ensure dynamic resources config is same
+	dynamicDiff := cmp.Diff(userBootstrap.DynamicResources, defaultBootstrap.DynamicResources, protocmp.Transform(),
+		cmp.FilterPath(func(p cmp.Path) bool {
+			s := p.GoString()
+			if strings.Contains(s, `protocmp.Transform({*bootstrapv3.Bootstrap_DynamicResources})["cds_config"].(protocmp.Message)["initial_fetch_timeout"]`) ||
+				strings.Contains(s, `protocmp.Transform({*bootstrapv3.Bootstrap_DynamicResources})["lds_config"].(protocmp.Message)["initial_fetch_timeout"]`) {
+				return true
+			}
+			return false
+		}, cmp.Ignore()))
 	if userBootstrap.DynamicResources == nil ||
-		cmp.Diff(userBootstrap.DynamicResources, defaultBootstrap.DynamicResources, protocmp.Transform()) != "" {
+		dynamicDiff != "" {
 		return fmt.Errorf("dynamic_resources cannot be modified")
 	}
 
